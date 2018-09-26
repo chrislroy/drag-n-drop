@@ -8,17 +8,17 @@ ApplicationWindow {
     visible: true
     title: qsTr("Simple Tree View")
 
-    DropArea {
-      id: mainMouseArea
-      anchors.fill: parent
-      onEntered: console.log("dnd entered ", drag.source.text)
-      onExited: console.log("dnd exited ", drag.source.text)
-      onDropped: console.log("dropped ", drag.source.text)
-      onPositionChanged: {
-          //drag.accept()
-          console.log("Position ", drag.x, drag.y)
-      }
-    }
+//        DropArea {
+//            id: mainMouseArea
+////            anchors.fill: parent
+////            onEntered: console.log("dnd entered ", drag.source.text)
+////            onExited: console.log("dnd exited ", drag.source.text)
+////            onDropped: console.log("dropped ", drag.source.text)
+////            onPositionChanged: {
+////                //drag.accept()
+////                console.log("Position ", drag.x, drag.y)
+////            }
+//        }
 
     TreeView {
         id: treeview

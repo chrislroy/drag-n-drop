@@ -74,12 +74,15 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
     QHash<int, QByteArray> roleNames() const override;
 
+    Q_INVOKABLE void updateModel(const QString& child, const QString& parent);
+
 private:
     QVariant newCustomType(const QString &text, int position);
     void setupModelData(const QStringList &lines, TreeItem *parent);
-
+    TreeItem* createItem(const QList<QVariant> &data, TreeItem *parentItem = nullptr);
     TreeItem *rootItem;
     QHash<int, QByteArray> m_roleNameMapping;
+    QMap<QString, TreeItem*> m_modelMap;
 };
 //! [0]
 

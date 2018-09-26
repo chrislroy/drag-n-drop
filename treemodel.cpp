@@ -1,10 +1,4 @@
 
-/*
-    treemodel.cpp
-
-    Provides a simple tree model to show how to create and use hierarchical
-    models.
-*/
 
 #include "treeitem.h"
 #include "treemodel.h"
@@ -12,8 +6,8 @@
 #include "customtype.h"
 
 #include <QStringList>
+#include <QDebug>
 
-//! [0]
 TreeModel::TreeModel(const QString &data, QObject *parent)
     : QAbstractItemModel(parent)
 {
@@ -25,16 +19,12 @@ TreeModel::TreeModel(const QString &data, QObject *parent)
     rootItem = new TreeItem(rootData);
     setupModelData(data.split(QString("\n")), rootItem);
 }
-//! [0]
 
-//! [1]
 TreeModel::~TreeModel()
 {
     delete rootItem;
 }
-//! [1]
 
-//! [2]
 int TreeModel::columnCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
@@ -42,9 +32,7 @@ int TreeModel::columnCount(const QModelIndex &parent) const
     else
         return rootItem->columnCount();
 }
-//! [2]
 
-//! [3]
 QVariant TreeModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
@@ -57,9 +45,7 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
 
     return item->data(role - Qt::UserRole - 1);
 }
-//! [3]
 
-//! [4]
 Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
@@ -67,9 +53,7 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 
     return QAbstractItemModel::flags(index);
 }
-//! [4]
 
-//! [5]
 QVariant TreeModel::headerData(int section, Qt::Orientation orientation,
                                int role) const
 {
@@ -78,9 +62,7 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation,
 
     return QVariant();
 }
-//! [5]
 
-//! [6]
 QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent)
             const
 {
@@ -100,9 +82,7 @@ QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent)
     else
         return QModelIndex();
 }
-//! [6]
 
-//! [7]
 QModelIndex TreeModel::parent(const QModelIndex &index) const
 {
     if (!index.isValid())
@@ -116,9 +96,7 @@ QModelIndex TreeModel::parent(const QModelIndex &index) const
 
     return createIndex(parentItem->row(), 0, parentItem);
 }
-//! [7]
 
-//! [8]
 int TreeModel::rowCount(const QModelIndex &parent) const
 {
     TreeItem *parentItem;
@@ -132,7 +110,7 @@ int TreeModel::rowCount(const QModelIndex &parent) const
 
     return parentItem->childCount();
 }
-//! [8]
+
 
 QHash<int, QByteArray> TreeModel::roleNames() const
 {
@@ -173,7 +151,7 @@ void TreeModel::setupModelData(const QStringList &lines, TreeItem *parent)
             QStringList columnStrings = lineData.split("\t", QString::SkipEmptyParts);
             QList<QVariant> columnData;
             for (int column = 0; column < columnStrings.count(); ++column)
-                columnData << newCustomType(columnStrings[column], position);
+                columnData << columnStrings[column];
 
             if (position > indentations.last()) {
                 // The last child of the current parent is now the new parent
@@ -191,9 +169,33 @@ void TreeModel::setupModelData(const QStringList &lines, TreeItem *parent)
             }
 
             // Append a new item to the current parent's list of children.
-            parents.last()->appendChild(new TreeItem(columnData, parents.last()));
+            parents.last()->appendChild(createItem(columnData, parents.last()));
         }
 
         ++number;
     }
+}
+
+
+TreeItem* TreeModel::createItem(const QList<QVariant> &data, TreeItem *parentItem)
+{
+    auto tree = new TreeItem(data, parentItem);
+
+    qDebug() << "Adding:" << data[0].toString();
+    m_modelMap.insert(data[0].toString(), tree);
+    return tree;
+}
+
+void TreeModel::updateModel(const QString& child, const QString& parent)
+{
+    qDebug() << parent << "--" << child;
+
+    beginResetModel();
+    auto childItem = m_modelMap[child];
+    auto parentItem = m_modelMap[parent];
+    // remove this item from its parent
+    childItem->parentItem()->takeChild(childItem);
+    // reparent it
+    parentItem->appendChild(childItem);
+    endResetModel();
 }
